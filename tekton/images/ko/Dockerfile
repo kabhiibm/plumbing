@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM golang:1.20-alpine@sha256:0d6e012ec44ed21993ee2ccf05839844f13347165ce7599a8e8442b02f836b45
+FROM --platform=$BUILDPLATFORM golang:1.20-alpine@sha256:b9ff7091cb0888abc44844d581be7a15f6913c54253d84f4385164353a30d6a7
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 ENV GOROOT /usr/local/go
@@ -19,7 +19,13 @@ RUN apk add --no-cache curl ca-certificates
 RUN update-ca-certificates
 
 ARG KO_VERSION=0.14.1
-RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
+ARG TARGETARCH ARCH
+RUN if [ $TARGETARCH = 'amd64' ]; then \
+       ARCH=x86_64; \
+    else \
+       ARCH=$TARGETARCH; \
+    fi
+RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_${ARCH}.tar.gz > ko_${KO_VERSION}.tar.gz
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
 RUN apk add --no-cache musl-dev gcc git
